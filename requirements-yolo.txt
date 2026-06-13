@@ -1,0 +1,4 @@
+# 在 jcc-yolo conda 环境中安装（无 GPU 或 conda 装 pytorch 失败时用 pip 兜底）
+ultralytics>=8.3.0
+Pillow>=10.0.0
+tqdm>=4.66.0

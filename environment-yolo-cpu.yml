@@ -1,0 +1,16 @@
+# YOLO CPU 版（无 NVIDIA GPU 时使用）
+name: jcc-yolo
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch>=2.0
+  - torchvision>=0.15
+  - cpuonly
+  - pip:
+      - ultralytics>=8.3.0
+      - Pillow>=10.0.0
+      - tqdm>=4.66.0

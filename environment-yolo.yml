@@ -1,0 +1,19 @@
+# YOLO 专用 conda 环境（检测训练 + 推理中的检测阶段）
+# 创建: conda env create -f environment-yolo.yml
+# 更新: conda env update -f environment-yolo.yml --prune
+name: jcc-yolo
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch>=2.0
+  - torchvision>=0.15
+  - pytorch-cuda=12.1
+  - pip:
+      - ultralytics>=8.3.0
+      - Pillow>=10.0.0
+      - tqdm>=4.66.0
