@@ -41,6 +41,7 @@ def train():
         exist_ok=True,
         rect=True,
         augment=True,
+        workers=2,
         device=0 if _has_cuda() else "cpu",
     )
     print(f"训练完成，权重目录: {results.save_dir}")

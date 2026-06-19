@@ -143,7 +143,8 @@ def write_yolo_split(split_name: str, items: list[dict], yolo_root: Path):
             "\n".join(lbl_lines) + ("\n" if lbl_lines else ""),
             encoding="utf-8",
         )
-        manifest.append(f"images/{split_name}/chanzi/{rec['img_path'].name}")
+        abs_path = (img_out / rec["img_path"].name).as_posix()
+        manifest.append(abs_path)
 
     (yolo_root / f"{split_name}.txt").write_text("\n".join(manifest) + "\n", encoding="utf-8")
 
