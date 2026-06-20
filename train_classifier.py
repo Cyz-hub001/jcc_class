@@ -49,6 +49,7 @@ def build_transforms(train: bool):
         return transforms.Compose(
             [
                 transforms.RandomResizedCrop(CLS_INPUT_SIZE, scale=(0.8, 1.0)),
+                transforms.RandomRotation(10),
                 transforms.ColorJitter(0.2, 0.2, 0.2, 0.05),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),

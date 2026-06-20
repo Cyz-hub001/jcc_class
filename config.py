@@ -37,7 +37,7 @@ YOLO_BATCH = 4
 CLS_INPUT_SIZE = 224  # ResNet18 标准输入尺寸，特征图从 4×4 恢复到 7×7
 CLS_EPOCHS = 50
 CLS_BATCH = 64
-STAR_CLASS_WEIGHTS = [1.0, 1.0, 2.5]
+STAR_CLASS_WEIGHTS = [1.0, 1.5, 5.0]  # ★=1.0  ★★=1.5(轻微提升)  ★★★=5.0(三星极少，大幅加权)
 
 # 推理
 CROP_PADDING = 0.08
