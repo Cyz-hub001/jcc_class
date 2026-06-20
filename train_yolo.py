@@ -1,5 +1,5 @@
 """
-训练 YOLO11n 单类棋子检测
+训练 YOLO 单类棋子检测（模型由 config.YOLO_MODEL 指定）
 
 请在 jcc-yolo conda 环境中运行:
     powershell -File scripts/train_yolo.ps1
@@ -9,8 +9,9 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
-from config import ROOT, YOLO_BATCH, YOLO_CONDA_ENV, YOLO_DATA, YOLO_EPOCHS, YOLO_IMGSZ
+from config import ROOT, YOLO_BATCH, YOLO_CONDA_ENV, YOLO_DATA, YOLO_EPOCHS, YOLO_IMGSZ, YOLO_MODEL
 
 
 def _check_env():
@@ -29,7 +30,8 @@ def train():
     save_dir = ROOT / "runs" / "detect"
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    model = YOLO("yolo11n.pt")
+    model = YOLO(YOLO_MODEL)
+    model_stem = Path(YOLO_MODEL).stem  # e.g. yolo11s
     results = model.train(
         data=str(YOLO_DATA),
         epochs=YOLO_EPOCHS,
@@ -37,7 +39,7 @@ def train():
         batch=YOLO_BATCH,
         patience=20,
         project=str(save_dir),
-        name="yolo11n_piece",
+        name=f"{model_stem}_piece",
         exist_ok=True,
         rect=True,
         augment=True,

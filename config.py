@@ -27,13 +27,14 @@ RANDOM_SEED = 42
 
 # YOLO（独立 conda 环境 jcc-yolo）
 YOLO_CONDA_ENV = "jcc-yolo"
+YOLO_MODEL = "yolo11s.pt"  # 预训练权重文件，升级到 s 版本以提升稀疏场景检测能力
 YOLO_DATA = DATASET / "yolo_detect" / "data_detect.yaml"
 YOLO_IMGSZ = 640
 YOLO_EPOCHS = 100
 YOLO_BATCH = 4
 
 # ResNet
-CLS_INPUT_SIZE = 128
+CLS_INPUT_SIZE = 224  # ResNet18 标准输入尺寸，特征图从 4×4 恢复到 7×7
 CLS_EPOCHS = 50
 CLS_BATCH = 64
 STAR_CLASS_WEIGHTS = [1.0, 1.0, 2.5]

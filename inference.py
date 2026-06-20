@@ -21,14 +21,16 @@ from config import (
     DETECT_IOU,
     HEROES,
     ROOT,
+    YOLO_MODEL,
 )
 from models.classifier import PieceClassifier
 
 
 def find_default_weights() -> tuple[Path | None, Path | None]:
+    yolo_name = Path(YOLO_MODEL).stem  # e.g. yolo11s
     yolo_candidates = [
-        ROOT / "runs" / "detect" / "yolo11n_piece" / "weights" / "best.pt",
-        ROOT / "runs" / "detect" / "yolo11n_piece" / "weights" / "last.pt",
+        ROOT / "runs" / "detect" / f"{yolo_name}_piece" / "weights" / "best.pt",
+        ROOT / "runs" / "detect" / f"{yolo_name}_piece" / "weights" / "last.pt",
     ]
     cls_candidates = [
         ROOT / "runs" / "classifier" / "best.pt",
