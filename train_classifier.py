@@ -19,6 +19,7 @@ from config import (
     CLS_INPUT_SIZE,
     DATASET,
     HEROES,
+    HERO_CLASS_WEIGHTS,
     NUM_HEROES,
     NUM_STARS,
     ROOT,
@@ -65,15 +66,19 @@ def build_transforms(train: bool):
     )
 
 
-def make_star_sampler(meta_path: Path) -> WeightedRandomSampler:
+def make_joint_sampler(meta_path: Path) -> WeightedRandomSampler:
+    """英雄+星级联合加权采样：样本少的英雄和稀有星级都被更多采样"""
     items = json.loads(meta_path.read_text(encoding="utf-8"))
-    star_counts = [0, 0, 0]
+    hero_counts = [0] * NUM_HEROES
+    star_counts = [0] * NUM_STARS
     for it in items:
+        hero_counts[it["hero_id"]] += 1
         star_counts[it["star"] - 1] += 1
     weights = []
     for it in items:
-        w = STAR_CLASS_WEIGHTS[it["star"] - 1] / star_counts[it["star"] - 1]
-        weights.append(w)
+        hero_w = HERO_CLASS_WEIGHTS[it["hero_id"]] / hero_counts[it["hero_id"]]
+        star_w = STAR_CLASS_WEIGHTS[it["star"] - 1] / star_counts[it["star"] - 1]
+        weights.append(hero_w * star_w)
     return WeightedRandomSampler(weights, num_samples=len(weights), replacement=True)
 
 
@@ -83,6 +88,9 @@ def evaluate(model, loader, device):
     hero_correct = hero_total = 0
     star_correct = star_total = 0
     both_correct = both_total = 0
+    # 分类别统计
+    hero_class_correct = [0] * NUM_HEROES
+    hero_class_total = [0] * NUM_HEROES
 
     for imgs, hero_y, star_y in loader:
         imgs = imgs.to(device)
@@ -100,10 +108,21 @@ def evaluate(model, loader, device):
         star_total += n
         both_total += n
 
+        # 分类别累计
+        for c in range(NUM_HEROES):
+            mask = hero_y == c
+            hero_class_total[c] += mask.sum().item()
+            hero_class_correct[c] += ((hero_pred == hero_y) & mask).sum().item()
+
+    hero_per_class = [
+        hero_class_correct[c] / max(hero_class_total[c], 1)
+        for c in range(NUM_HEROES)
+    ]
     return {
         "hero_acc": hero_correct / max(hero_total, 1),
         "star_acc": star_correct / max(star_total, 1),
         "joint_acc": both_correct / max(both_total, 1),
+        "hero_per_class": hero_per_class,
     }
 
 
@@ -120,13 +139,14 @@ def train():
     train_ds = CropDataset(train_meta, build_transforms(train=True))
     val_ds = CropDataset(val_meta, build_transforms(train=False))
 
-    sampler = make_star_sampler(train_meta)
+    sampler = make_joint_sampler(train_meta)
     train_loader = DataLoader(train_ds, batch_size=CLS_BATCH, sampler=sampler, num_workers=0)
     val_loader = DataLoader(val_ds, batch_size=CLS_BATCH, shuffle=False, num_workers=0)
 
     model = PieceClassifier(NUM_HEROES, NUM_STARS).to(device)
+    hero_weight = torch.tensor(HERO_CLASS_WEIGHTS, dtype=torch.float32, device=device)
     star_weight = torch.tensor(STAR_CLASS_WEIGHTS, dtype=torch.float32, device=device)
-    hero_crit = nn.CrossEntropyLoss()
+    hero_crit = nn.CrossEntropyLoss(weight=hero_weight)
     star_crit = nn.CrossEntropyLoss(weight=star_weight)
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
@@ -163,6 +183,10 @@ def train():
             f"hero_acc={metrics['hero_acc']:.3f} star_acc={metrics['star_acc']:.3f} "
             f"joint_acc={metrics['joint_acc']:.3f}"
         )
+        # 打印各英雄准确率
+        per_class = metrics["hero_per_class"]
+        hero_accs = "  ".join(f"{HEROES[i][:4]}={per_class[i]:.0%}" for i in range(NUM_HEROES))
+        print(f"  英雄准确率: {hero_accs}")
 
         if metrics["joint_acc"] > best_joint:
             best_joint = metrics["joint_acc"]
